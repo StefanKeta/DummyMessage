@@ -28,18 +28,6 @@ lazy val root = (project in file("."))
   )
   .aggregate(server, client, domain)
 
-lazy val server = (project in file("server"))
-  .settings(
-    commonSettings,
-    libraryDependencies ++= Seq(
-      "org.http4s" %% "http4s-core" % http4sV,
-      "org.http4s" %% "http4s-ember-server" % http4sV,
-      "com.softwaremill.sttp.tapir" %% "tapir-http4s-server" % tapirV,
-      "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirV
-    )
-  )
-  .dependsOn(domain, routes)
-
 lazy val client = (project in file("client"))
   .settings(
     commonSettings,
@@ -49,21 +37,52 @@ lazy val client = (project in file("client"))
     )
   )
 
-lazy val routes = (project in file("routes"))
-  .settings(
-    commonSettings,
-    libraryDependencies ++= Seq(
-      "org.http4s" %% "http4s-core" % http4sV,
-      "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % tapirV,
-      "com.softwaremill.sttp.tapir" %% "tapir-http4s-server" % tapirV,
-      "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirV
-    )
+lazy val core = createModule(
+  "core",
+  Seq(
+    "org.flywaydb" % "flyway-core" % "9.6.0"
   )
+)
+
+lazy val storage = createModule(
+  "storage",
+  Seq(
+    "org.tpolecat" %% "skunk-core" % "0.3.2"
+  )
+)
+  .dependsOn(core)
+
+lazy val domain = createModule(
+  "domain",
+  Seq("com.softwaremill.sttp.tapir" %% "tapir-json-circe" % tapirV)
+)
+
+lazy val routes = createModule(
+  "routes",
+  Seq(
+    "org.http4s" %% "http4s-core" % http4sV,
+    "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % tapirV,
+    "com.softwaremill.sttp.tapir" %% "tapir-http4s-server" % tapirV,
+    "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirV
+  )
+)
   .dependsOn(domain)
 
-lazy val domain = (project in file("domain"))
-  .settings(
-    commonSettings,
-    libraryDependencies ++=
-      Seq("com.softwaremill.sttp.tapir" %% "tapir-json-circe" % tapirV)
+lazy val server = createModule(
+  "server",
+  Seq(
+    "org.http4s" %% "http4s-core" % http4sV,
+    "org.http4s" %% "http4s-ember-server" % http4sV,
+    "com.softwaremill.sttp.tapir" %% "tapir-http4s-server" % tapirV,
+    "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirV
   )
+)
+  .dependsOn(domain, routes)
+
+def createModule(name: String, extraDependencies: Seq[ModuleID]) = {
+  Project(name,file(name))
+    .settings(
+      commonSettings,
+      libraryDependencies ++= extraDependencies
+    )
+}

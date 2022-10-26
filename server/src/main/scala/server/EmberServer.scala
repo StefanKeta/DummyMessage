@@ -12,7 +12,7 @@ import sttp.tapir.swagger.bundle.SwaggerInterpreter
 import user_routes.UserRoutes
 
 object EmberServer {
-  def defaultHttpApp[F[_]: Async]:F[HttpApp[F]] = for {
+  def defaultHttpApp[F[_]: Async]: F[HttpApp[F]] = for {
     userRoutes <- UserRoutes[F].pure[F]
     implicit0(http4sInterpreter: Http4sServerInterpreter[F]) <-
       Http4sServerInterpreter[F]().pure[F]

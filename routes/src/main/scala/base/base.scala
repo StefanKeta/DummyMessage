@@ -18,7 +18,7 @@ package object base {
       .securityIn(auth.bearer[String]())
 
   val healthEndpoint: BaseEndpoint[Unit, StatusCode] = baseEndpoint.get
-    .in("api" / "health")
+    .in("health")
     .out(statusCode)
 
   def healthRoute[F[_]: Applicative]() =
@@ -26,6 +26,6 @@ package object base {
 
   def toRoutes[F[_]](routes: List[ServerEndpoint[Any, F]])(implicit
       http4sServerInterpreter: Http4sServerInterpreter[F]
-  ):HttpRoutes[F] =
+  ): HttpRoutes[F] =
     http4sServerInterpreter.toRoutes(routes)
 }

@@ -7,7 +7,6 @@ import sttp.model.StatusCode
 import sttp.tapir._
 import sttp.tapir.generic.auto._
 import sttp.tapir.json.circe._
-import sttp.tapir.server.http4s.Http4sServerInterpreter
 import sttp.tapir.statusCode
 import user.User
 
