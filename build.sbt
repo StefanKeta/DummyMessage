@@ -40,6 +40,7 @@ lazy val client = (project in file("client"))
 lazy val core = createModule(
   "core",
   Seq(
+    "com.github.pureconfig" %% "pureconfig" % "0.17.1",
     "org.flywaydb" % "flyway-core" % "9.6.0"
   )
 )
@@ -77,7 +78,7 @@ lazy val server = createModule(
     "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirV
   )
 )
-  .dependsOn(domain, routes)
+  .dependsOn(core,domain, routes)
 
 def createModule(name: String, extraDependencies: Seq[ModuleID]) = {
   Project(name,file(name))
