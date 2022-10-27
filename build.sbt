@@ -41,7 +41,8 @@ lazy val core = createModule(
   "core",
   Seq(
     "com.github.pureconfig" %% "pureconfig" % "0.17.1",
-    "org.flywaydb" % "flyway-core" % "9.6.0"
+    "org.flywaydb" % "flyway-core" % "9.6.0",
+    "org.postgresql" % "postgresql" % "42.5.0"
   )
 )
 
