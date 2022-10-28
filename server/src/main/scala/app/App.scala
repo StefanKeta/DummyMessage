@@ -8,9 +8,7 @@ import server.EmberServer
 object App extends IOApp {
   override def run(args: List[String]): IO[ExitCode] = for {
     config <- AppConfig.load[IO]()
-    _ <- IO.println(config)
-    migrations <- Migrator.migrate[IO](config.db)
-    _ <- IO.println(s"Executed $migrations migrations")
+    _ <- Migrator.migrate[IO](config.db)
     httpApp <- EmberServer.defaultHttpApp[IO]
     exitCode <- EmberServer
       .server[IO](httpApp)

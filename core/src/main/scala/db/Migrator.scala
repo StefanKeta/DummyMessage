@@ -13,6 +13,8 @@ object Migrator {
         .configure()
         .dataSource(url, dbConfig.username, dbConfig.password)
         .locations("classpath:sql")
+        .table("db-changelog")
+        .baselineOnMigrate(true)
         .load()
         .migrate()
         .migrations
