@@ -1,7 +1,10 @@
 package domain
 
-import user.User
+import cats.effect.kernel.Async
+import domain.user.User
+import error.ErrorInfo
+import sttp.model.StatusCode
 
-trait Executor {
-  def register(user:User)
+trait Executor[F[_]] {
+  def register(user: User): F[StatusCode]
 }

@@ -1,13 +1,13 @@
 CREATE TYPE GENDER AS ENUM ('MALE','FEMALE');
 
 CREATE TABLE IF NOT EXISTS user_account(
-    user_id UUID,
-    first_name TEXT,
-    last_name TEXT,
-    gender GENDER,
+    user_id UUID NOT NULL,
+    first_name TEXT NOT NULL,
+    last_name TEXT NOT NULL,
+    gender GENDER NOT NULL,
     dob DATE,
-    email TEXT,
-    password TEXT,
+    email TEXT NOT NULL,
+    password TEXT NOT NULL,
     activated BOOLEAN DEFAULT false,
-    created_at TIMESTAMP
+    created_at TIMESTAMPTZ
 );

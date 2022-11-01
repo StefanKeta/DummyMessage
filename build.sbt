@@ -10,11 +10,13 @@ val http4sV = "0.23.16"
 val tapirV = "1.1.3"
 val catsV = "2.8.0"
 val catsEffectV = "3.3.14"
+lazy val doobieVersion = "1.0.0-RC1"
 
 val commonSettings = Seq(
   libraryDependencies ++= Seq(
     "org.typelevel" %% "cats-core" % catsV,
-    "org.typelevel" %% "cats-effect" % catsEffectV
+    "org.typelevel" %% "cats-effect" % catsEffectV,
+    "ch.qos.logback" % "logback-classic" % "1.4.4",
   ),
   addCompilerPlugin(
     "org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full
@@ -46,18 +48,28 @@ lazy val core = createModule(
   )
 )
 
-lazy val storage = createModule(
-  "storage",
-  Seq(
-    "org.tpolecat" %% "skunk-core" % "0.3.2"
-  )
-)
-  .dependsOn(core)
-
 lazy val domain = createModule(
   "domain",
-  Seq("com.softwaremill.sttp.tapir" %% "tapir-json-circe" % tapirV)
+  Seq(
+    "org.tpolecat" %% "doobie-core" % doobieVersion,
+    "org.tpolecat" %% "doobie-postgres" % doobieVersion,
+    "com.beachape" %% "enumeratum-doobie" % "1.6.0",
+    "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % tapirV,
+    "com.beachape" %% "enumeratum-circe" % "1.7.0",
+  )
 )
+
+lazy val endpoints = createModule(
+  "endpoints",
+  Seq(
+    "org.http4s" %% "http4s-core" % http4sV,
+    "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % tapirV,
+    "com.softwaremill.sttp.tapir" %% "tapir-http4s-server" % tapirV,
+    "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirV,
+    "com.beachape" %% "enumeratum-circe" % "1.7.0"
+  )
+)
+  .dependsOn(domain)
 
 lazy val routes = createModule(
   "routes",
@@ -65,10 +77,11 @@ lazy val routes = createModule(
     "org.http4s" %% "http4s-core" % http4sV,
     "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % tapirV,
     "com.softwaremill.sttp.tapir" %% "tapir-http4s-server" % tapirV,
-    "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirV
+    "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirV,
+    "com.beachape" %% "enumeratum-circe" % "1.7.0"
   )
 )
-  .dependsOn(domain)
+  .dependsOn(domain, endpoints, userAlgebra)
 
 lazy val server = createModule(
   "server",
@@ -79,10 +92,24 @@ lazy val server = createModule(
     "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirV
   )
 )
-  .dependsOn(core,domain, routes)
+  .dependsOn(core, domain, routes)
 
-def createModule(name: String, extraDependencies: Seq[ModuleID]) = {
-  Project(name,file(name))
+lazy val storage = createModule(
+  "storage",
+  Seq(
+    "org.tpolecat" %% "doobie-core" % doobieVersion,
+    "org.tpolecat" %% "doobie-postgres" % doobieVersion,
+    "com.beachape" %% "enumeratum-circe" % "1.7.0",
+  )
+)
+  .dependsOn(core,domain)
+
+lazy val userAlgebra = (project in file("algebras/user-algebra"))
+  .settings(commonSettings)
+  .dependsOn(domain, storage)
+
+def createModule(name: String, extraDependencies: Seq[ModuleID] = Seq()) = {
+  Project(name, file(name))
     .settings(
       commonSettings,
       libraryDependencies ++= extraDependencies
