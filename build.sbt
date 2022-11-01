@@ -16,7 +16,7 @@ val commonSettings = Seq(
   libraryDependencies ++= Seq(
     "org.typelevel" %% "cats-core" % catsV,
     "org.typelevel" %% "cats-effect" % catsEffectV,
-    "ch.qos.logback" % "logback-classic" % "1.4.4",
+    "ch.qos.logback" % "logback-classic" % "1.4.4"
   ),
   addCompilerPlugin(
     "org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full
@@ -55,7 +55,7 @@ lazy val domain = createModule(
     "org.tpolecat" %% "doobie-postgres" % doobieVersion,
     "com.beachape" %% "enumeratum-doobie" % "1.6.0",
     "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % tapirV,
-    "com.beachape" %% "enumeratum-circe" % "1.7.0",
+    "com.beachape" %% "enumeratum-circe" % "1.7.0"
   )
 )
 
@@ -99,14 +99,24 @@ lazy val storage = createModule(
   Seq(
     "org.tpolecat" %% "doobie-core" % doobieVersion,
     "org.tpolecat" %% "doobie-postgres" % doobieVersion,
-    "com.beachape" %% "enumeratum-circe" % "1.7.0",
+    "com.beachape" %% "enumeratum-circe" % "1.7.0"
   )
 )
-  .dependsOn(core,domain)
+  .dependsOn(core, domain)
+
+lazy val util = createModule(
+  "util",
+  Seq(
+    "de.mkammerer" % "argon2-jvm" % "2.11"
+  )
+)
+  .dependsOn(domain)
 
 lazy val userAlgebra = (project in file("algebras/user-algebra"))
-  .settings(commonSettings)
-  .dependsOn(domain, storage)
+  .settings(
+    commonSettings
+  )
+  .dependsOn(domain, storage, util)
 
 def createModule(name: String, extraDependencies: Seq[ModuleID] = Seq()) = {
   Project(name, file(name))

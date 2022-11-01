@@ -1,8 +1,5 @@
 package user_algebra.impl
 
-import cats.{Semigroup, Semigroupal}
-import cats.data.Validated
-import cats.data._
 import cats.implicits._
 import cats.effect.Sync
 import dao.UserDao
@@ -10,6 +7,7 @@ import domain.user.User
 import doobie.implicits._
 import doobie.util.transactor.Transactor
 import error._
+import password.PasswordHasher
 import storage.UserQueries
 import user_algebra.UserAlgebra
 
@@ -18,12 +16,13 @@ import java.util.UUID
 
 private[user_algebra] class UserAlgebraImpl[F[_]](
     userQueries: UserQueries
-)(implicit xa: Transactor[F], F: Sync[F])
+)(implicit F: Sync[F], xa: Transactor[F], passwordHasher: PasswordHasher[F])
     extends UserAlgebra[F] {
   override def registerUser(user: User): F[Int] = for {
 //    _ <- validateEmail(user.email)
     _ <- validateFirstName(user.firstName)
     _ <- validateLastName(user.lastName)
+    hashedPassword <- passwordHasher.hashPassword(user.password)
     program = for {
       userOpt <- userQueries.findByEmail(user.email)
       result <- userOpt match {
@@ -40,7 +39,7 @@ private[user_algebra] class UserAlgebraImpl[F[_]](
               gender = user.gender,
               dob = user.dob,
               email = user.email,
-              password = user.password,
+              password = hashedPassword,
               activated = false,
               createdAt = OffsetDateTime.now()
             )

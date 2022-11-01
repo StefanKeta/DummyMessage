@@ -7,8 +7,9 @@ import doobie.util.transactor.Transactor
 import org.http4s.HttpApp
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.server.Router
+import password.PasswordHasher
 import routes.ServerExecutor
-import sttp.tapir.server.http4s.{Http4sServerInterpreter, Http4sServerOptions}
+import sttp.tapir.server.http4s.Http4sServerInterpreter
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
 import routes.user.UserRoutes
 import storage.UserQueries
@@ -26,6 +27,7 @@ object EmberServer {
         "password" // password
       )
       .pure[F]
+    implicit0(passwordHasher: PasswordHasher[F]) <- PasswordHasher[F].pure[F]
     userQueries <- UserQueries().pure[F]
     userAlgebra <- UserAlgebra[F](userQueries).pure[F]
     serverExecutor <- new ServerExecutor[F](userAlgebra).pure[F]

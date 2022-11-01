@@ -10,7 +10,6 @@ import java.time.LocalDateTime
 object App extends IOApp {
   override def run(args: List[String]): IO[ExitCode] = for {
     config <- AppConfig.load[IO]()
-    _ <- IO.println(LocalDateTime.now())
     _ <- Migrator.migrate[IO](config.db)
     httpApp <- EmberServer.defaultHttpApp[IO]
     exitCode <- EmberServer
