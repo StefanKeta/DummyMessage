@@ -6,7 +6,8 @@ import pureconfig.ConfigSource
 import pureconfig.generic.auto._
 
 case class AppConfig private[config] (
-    db: DbConfig
+    db: DbConfig,
+    email: EmailConfig
 )
 
 object AppConfig {

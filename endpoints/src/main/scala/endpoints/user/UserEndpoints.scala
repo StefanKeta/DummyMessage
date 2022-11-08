@@ -10,7 +10,7 @@ import domain.user._
 import error.{ErrorInfo, InvalidEmail, UserAlreadyExists, ValidationErrors}
 
 trait UserEndpoints {
-  val registerUser: BaseEndpoint[User, ErrorInfo, StatusCode] =
+  val registerUser: BaseEndpoint[User, ErrorInfo, Unit] =
     baseEndpoint.post
       .in("register")
       .in(jsonBody[User])
@@ -24,5 +24,5 @@ trait UserEndpoints {
           )
         )
       )
-      .out(statusCode)
+      .out(statusCode(StatusCode.Ok))
 }

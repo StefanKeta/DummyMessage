@@ -2,52 +2,82 @@ package user_algebra.impl
 
 import cats.implicits._
 import cats.effect.Sync
-import dao.UserDao
+import dao.{UserDao, UserTokenDao}
 import domain.user.User
 import doobie.implicits._
 import doobie.util.transactor.Transactor
 import error._
 import password.PasswordHasher
-import storage.UserQueries
+import storage.{UserQueries, UserTokensQueries}
+import time.Time
+import token.SecureRandom
 import user_algebra.UserAlgebra
 
 import java.time.OffsetDateTime
 import java.util.UUID
 
 private[user_algebra] class UserAlgebraImpl[F[_]](
-    userQueries: UserQueries
-)(implicit F: Sync[F], xa: Transactor[F], passwordHasher: PasswordHasher[F])
-    extends UserAlgebra[F] {
-  override def registerUser(user: User): F[Int] = for {
+    userQueries: UserQueries,
+    userTokensQueries: UserTokensQueries
+)(implicit
+    F: Sync[F],
+    xa: Transactor[F],
+    passwordHasher: PasswordHasher[F],
+    secureRandom: SecureRandom[F],
+    time: Time[F]
+) extends UserAlgebra[F] {
+  override def registerUser(user: User): F[String] = for {
 //    _ <- validateEmail(user.email)
     _ <- validateFirstName(user.firstName)
     _ <- validateLastName(user.lastName)
     hashedPassword <- passwordHasher.hashPassword(user.password)
+    token <- secureRandom.generateToken()
+    uuid <- secureRandom.generateUuid()
+    tomorrow <- time.tomorrow
     program = for {
       userOpt <- userQueries.findByEmail(user.email)
-      result <- userOpt match {
+      _ <- userOpt match {
         case Some(user) =>
-          WeakAsyncConnectionIO.raiseError[Int](
+          WeakAsyncConnectionIO.raiseError[String](
             UserAlreadyExists(s"User with ${user.email} already exists!")
           )
         case None =>
-          userQueries.insert(
-            UserDao(
-              uuid = UUID.randomUUID(),
-              firstName = user.firstName,
-              lastName = user.lastName,
-              gender = user.gender,
-              dob = user.dob,
-              email = user.email,
-              password = hashedPassword,
-              activated = false,
-              createdAt = OffsetDateTime.now()
-            )
-          )
+          for {
+            _ <- insertUser(uuid, user, hashedPassword, userQueries)
+            tokenDao = UserTokenDao(token, uuid, tomorrow)
+            _ <- insertToken(tokenDao, userTokensQueries)
+          } yield ()
       }
-    } yield result
+    } yield token
     transactionResult <- program.transact(xa)
   } yield transactionResult
+
+  private def insertUser(
+      userId: UUID,
+      user: User,
+      password: String,
+      userQueries: UserQueries
+  ) =
+    userQueries.insert(
+      UserDao(
+        uuid = userId,
+        firstName = user.firstName,
+        lastName = user.lastName,
+        gender = user.gender,
+        dob = user.dob,
+        email = user.email,
+        password = password,
+        activated = false,
+        createdAt = OffsetDateTime.now()
+      )
+    )
+
+  private def insertToken(
+      tokenDao: UserTokenDao,
+      userTokensQueries: UserTokensQueries
+  ) =
+    userTokensQueries
+      .insert(tokenDao)
 
   private def validateEmail(email: String): F[Unit] =
     if (

@@ -16,7 +16,8 @@ val commonSettings = Seq(
   libraryDependencies ++= Seq(
     "org.typelevel" %% "cats-core" % catsV,
     "org.typelevel" %% "cats-effect" % catsEffectV,
-    "ch.qos.logback" % "logback-classic" % "1.4.4"
+    "ch.qos.logback" % "logback-classic" % "1.4.4",
+    "co.fs2" %% "fs2-core" % "3.3.0"
   ),
   addCompilerPlugin(
     "org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full
@@ -26,20 +27,22 @@ val commonSettings = Seq(
 
 lazy val root = (project in file("."))
   .settings(
-    name := "DummyMessage"
+    name := "DummyMessage",
+    commonSettings
   )
   .aggregate(server, client, domain)
 
-lazy val client = (project in file("client"))
-  .settings(
-    commonSettings,
-    libraryDependencies ++= Seq(
-      "org.http4s" %% "http4s-core" % http4sV,
-      "org.http4s" %% "http4s-ember-client" % http4sV
-    )
+lazy val client = createModule(
+  "client",
+  "client",
+  Seq(
+    "org.http4s" %% "http4s-core" % http4sV,
+    "org.http4s" %% "http4s-ember-client" % http4sV
   )
+)
 
 lazy val core = createModule(
+  "core",
   "core",
   Seq(
     "com.github.pureconfig" %% "pureconfig" % "0.17.1",
@@ -49,6 +52,7 @@ lazy val core = createModule(
 )
 
 lazy val domain = createModule(
+  "domain",
   "domain",
   Seq(
     "org.tpolecat" %% "doobie-core" % doobieVersion,
@@ -60,6 +64,7 @@ lazy val domain = createModule(
 )
 
 lazy val endpoints = createModule(
+  "endpoints",
   "endpoints",
   Seq(
     "org.http4s" %% "http4s-core" % http4sV,
@@ -73,6 +78,7 @@ lazy val endpoints = createModule(
 
 lazy val routes = createModule(
   "routes",
+  "routes",
   Seq(
     "org.http4s" %% "http4s-core" % http4sV,
     "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % tapirV,
@@ -81,9 +87,10 @@ lazy val routes = createModule(
     "com.beachape" %% "enumeratum-circe" % "1.7.0"
   )
 )
-  .dependsOn(domain, endpoints, userAlgebra)
+  .dependsOn(domain, endpoints, userAlgebra, emailAlgebra)
 
 lazy val server = createModule(
+  "server",
   "server",
   Seq(
     "org.http4s" %% "http4s-core" % http4sV,
@@ -96,6 +103,7 @@ lazy val server = createModule(
 
 lazy val storage = createModule(
   "storage",
+  "storage",
   Seq(
     "org.tpolecat" %% "doobie-core" % doobieVersion,
     "org.tpolecat" %% "doobie-postgres" % doobieVersion,
@@ -104,22 +112,57 @@ lazy val storage = createModule(
 )
   .dependsOn(core, domain)
 
-lazy val util = createModule(
-  "util",
+lazy val utilPassword = createModule(
+  "password",
+  "util/password",
   Seq(
     "de.mkammerer" % "argon2-jvm" % "2.11"
   )
 )
   .dependsOn(domain)
 
-lazy val userAlgebra = (project in file("algebras/user-algebra"))
-  .settings(
-    commonSettings
-  )
-  .dependsOn(domain, storage, util)
+//  (project in file("util/password"))
+//  .settings(
+//    commonSettings,
+//    libraryDependencies ++= Seq(
+//      "de.mkammerer" % "argon2-jvm" % "2.11"
+//    )
+//  )
+//  .dependsOn(domain)
 
-def createModule(name: String, extraDependencies: Seq[ModuleID] = Seq()) = {
-  Project(name, file(name))
+lazy val utilToken = createModule(
+  "token",
+  "util/token"
+)
+  .dependsOn(domain)
+
+lazy val utilTime = createModule(
+  "time",
+  "util/time"
+)
+  .dependsOn(domain)
+
+lazy val userAlgebra = createModule(
+  "user-algebra",
+  "algebras/user-algebra"
+)
+  .dependsOn(domain, storage, utilPassword, utilToken, utilTime)
+
+lazy val emailAlgebra = createModule(
+  "email-algebra",
+  "algebras/email-algebra",
+  Seq(
+    "com.sun.mail" % "javax.mail" % "1.6.2"
+  )
+)
+  .dependsOn(core, utilToken)
+
+def createModule(
+    name: String,
+    path: String,
+    extraDependencies: Seq[ModuleID] = Seq()
+) = {
+  Project(name, file(path))
     .settings(
       commonSettings,
       libraryDependencies ++= extraDependencies

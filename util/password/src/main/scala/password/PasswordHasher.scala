@@ -2,7 +2,7 @@ package password
 
 import cats.effect.kernel.Sync
 import cats.implicits._
-import de.mkammerer.argon2.{Argon2, Argon2Factory}
+import de.mkammerer.argon2.Argon2Factory
 import de.mkammerer.argon2.Argon2Factory.Argon2Types
 import error.FailedToHashPassword
 
