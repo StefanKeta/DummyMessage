@@ -8,7 +8,10 @@ import doobie._
 import java.time.OffsetDateTime
 import java.util.UUID
 
-trait UserTokensQueries extends GenericQueries[UserTokenDao]
+trait UserTokensQueries extends GenericQueries[UserTokenDao] {
+  def findToken(token: String): ConnectionIO[Option[UserTokenDao]]
+  def remove(token: String): ConnectionIO[Int]
+}
 
 object UserTokensQueries {
   def apply(): UserTokensQueries = new UserTokensQueries {
@@ -28,5 +31,19 @@ object UserTokensQueries {
            ${t.expiresAt}
            )
          """.stripMargin.update.run
+
+    override def findToken(
+        token: String
+    ): doobie.ConnectionIO[Option[UserTokenDao]] =
+      sql"""
+           SELECT * FROM user_tokens WHERE token = $token
+         """.stripMargin
+        .query[UserTokenDao]
+        .option
+
+    override def remove(token: String): doobie.ConnectionIO[Int] =
+      sql"""
+           DELETE FROM user_tokens WHERE token = $token
+         """.update.run
   }
 }

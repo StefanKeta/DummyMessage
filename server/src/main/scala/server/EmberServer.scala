@@ -46,7 +46,7 @@ object EmberServer {
     ).pure[F]
     userRoutes <- UserRoutes[F](serverExecutor).pure[F]
     endpoints <- userRoutes.userEndpoints.pure[F]
-    routes <- userRoutes.userRoutes.pure[F]
+    routes <- userRoutes.routes.pure[F]
     swaggerInterpreter <- Http4sServerInterpreter[F]()
       .toRoutes(
         SwaggerInterpreter().fromEndpoints[F](endpoints, "Title", "v1")

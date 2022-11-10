@@ -142,11 +142,11 @@ lazy val utilTime = createModule(
 )
   .dependsOn(domain)
 
-lazy val userAlgebra = createModule(
-  "user-algebra",
-  "algebras/user-algebra"
+lazy val authAlgebra = createModule(
+  "auth-algebra",
+  "algebras/auth-algebra"
 )
-  .dependsOn(domain, storage, utilPassword, utilToken, utilTime)
+  .dependsOn(core,utilToken,utilPassword,utilTime,storage)
 
 lazy val emailAlgebra = createModule(
   "email-algebra",
@@ -156,6 +156,13 @@ lazy val emailAlgebra = createModule(
   )
 )
   .dependsOn(core, utilToken)
+
+lazy val userAlgebra = createModule(
+  "user-algebra",
+  "algebras/user-algebra"
+)
+  .dependsOn(domain, storage, utilPassword, utilToken, utilTime)
+
 
 def createModule(
     name: String,

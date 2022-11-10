@@ -52,6 +52,26 @@ private[user_algebra] class UserAlgebraImpl[F[_]](
     transactionResult <- program.transact(xa)
   } yield transactionResult
 
+  override def activateUser(token: String): F[Unit] = for {
+    maybeToken <- userTokensQueries.findToken(token).transact(xa)
+    tokenDao <- maybeToken match {
+      case Some(token) =>
+        for {
+          isExpired <- time.isExpired(token.expiresAt)
+          _ <-
+            if (isExpired)
+              F.raiseError(TokenExpired(s"Token $token has expired!"))
+            else token.pure[F]
+        } yield token
+      case None =>
+        F.raiseError(TokenDoesNotExist(s"The token $token does not exist!"))
+    }
+    result <- userQueries.activateUser(tokenDao.userId).transact(xa)
+    _ <-
+      if (result == 1) userTokensQueries.remove(token).transact(xa)
+      else F.raiseError(UserAlreadyActivated("User is already active"))
+  } yield ()
+
   private def insertUser(
       userId: UUID,
       user: User,

@@ -8,12 +8,14 @@ import sttp.tapir.server.http4s.Http4sServerInterpreter
 class UserRoutes[F[_]: Async: Http4sServerInterpreter](
     executor: Executor[F]
 ) extends UserEndpoints {
-  private val registerRoute = Http4sServerInterpreter[F].toRoutes(
-    registerUser.serverLogicRecoverErrors(executor.register)
+   val routes = Http4sServerInterpreter[F].toRoutes(
+    List(
+      registerUser.serverLogicRecoverErrors(executor.register),
+      activateUser.serverLogicRecoverErrors(executor.activate),
+      loginUser.serverLogicRecoverErrors(executor.login)
+    )
   )
-  val userEndpoints = List(registerUser)
-  val userRoutes =
-    registerRoute
+  val userEndpoints = List(registerUser, activateUser)
 }
 
 object UserRoutes {

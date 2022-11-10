@@ -1,12 +1,10 @@
 package domain.user
 
-import io.circe.{Codec, Decoder, Encoder}
+import io.circe.Codec
 import io.circe.generic.semiauto.deriveCodec
 import sttp.tapir.Schema
 
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import scala.util.Try
 case class User(
     firstName: String,
     lastName: String,

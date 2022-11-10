@@ -10,6 +10,7 @@ import user_algebra.impl.UserAlgebraImpl
 
 trait UserAlgebra[F[_]] {
   def registerUser(user: User): F[String] //Returning token for registration
+  def activateUser(token: String): F[Unit]
 }
 
 object UserAlgebra {

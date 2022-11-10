@@ -7,7 +7,7 @@ import sttp.model.StatusCode
 import io.circe.generic.auto._
 import endpoints._
 import domain.user._
-import error.{ErrorInfo, InvalidEmail, UserAlreadyExists, ValidationErrors}
+import error._
 
 trait UserEndpoints {
   val registerUser: BaseEndpoint[User, ErrorInfo, Unit] =
@@ -25,4 +25,31 @@ trait UserEndpoints {
         )
       )
       .out(statusCode(StatusCode.Ok))
+
+  val activateUser: BaseEndpoint[String, RegistrationErrors, Unit] =
+    baseEndpoint.post
+      .in("activate" / path[String])
+      .errorOut(
+        oneOf[RegistrationErrors](
+          oneOfVariant(
+            statusCode(StatusCode.BadRequest).and(jsonBody[TokenDoesNotExist])
+          )
+        )
+      )
+
+  val loginUser: BaseEndpoint[BasicCredentials, ErrorInfo, AuthCtx] =
+    baseEndpoint.post
+      .in("login")
+      .in(jsonBody[BasicCredentials])
+      .errorOut(
+        oneOf[ErrorInfo](
+          oneOfVariant[ErrorInfo](
+            statusCode(StatusCode.BadRequest).and(jsonBody[ValidationErrors])
+          ),
+          oneOfVariant(
+            statusCode(StatusCode.Unauthorized).and(jsonBody[UnauthorizedError])
+          )
+        )
+      )
+      .out(jsonBody[AuthCtx] and statusCode(StatusCode.Ok))
 }

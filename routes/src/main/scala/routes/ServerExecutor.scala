@@ -5,7 +5,7 @@ import cats.effect.implicits.genSpawnOps
 import domain.Executor
 import cats.implicits._
 import config.AppConfig
-import domain.user.User
+import domain.user.{BasicCredentials, User}
 import email.EmailAlgebra
 import user_algebra.UserAlgebra
 
@@ -31,4 +31,11 @@ class ServerExecutor[F[_]: Async](
     case Outcome.Canceled()    => Async[F].unit
   }
 
+  override def activate(token: String): F[Unit] = for {
+    _ <- userAlgebra.activateUser(token)
+  } yield ()
+
+  override def login(basicCredentials: BasicCredentials): F[String] = for{
+    _ <-
+  } yield ???
 }
