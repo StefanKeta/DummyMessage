@@ -1,5 +1,6 @@
 package server
 
+import auth.AuthAlgebra
 import cats.effect.{Async, Resource}
 import cats.implicits._
 import com.comcast.ip4s._
@@ -39,10 +40,12 @@ object EmberServer {
     userTokensQueries <- UserTokensQueries().pure[F]
     userAlgebra <- UserAlgebra[F](userQueries, userTokensQueries).pure[F]
     emailAlgebra <- EmailAlgebra[F].pure[F]
+    authAlgebra <- AuthAlgebra.instance(userQueries, userTokensQueries).pure[F]
     serverExecutor <- new ServerExecutor[F](
       appConfig = config,
       userAlgebra = userAlgebra,
-      emailAlgebra = emailAlgebra
+      emailAlgebra = emailAlgebra,
+      authAlgebra = authAlgebra
     ).pure[F]
     userRoutes <- UserRoutes[F](serverExecutor).pure[F]
     endpoints <- userRoutes.userEndpoints.pure[F]

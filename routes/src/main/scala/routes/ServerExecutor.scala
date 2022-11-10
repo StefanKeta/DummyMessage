@@ -1,18 +1,20 @@
 package routes
 
+import auth.AuthAlgebra
 import cats.effect._
 import cats.effect.implicits.genSpawnOps
 import domain.Executor
 import cats.implicits._
 import config.AppConfig
-import domain.user.{BasicCredentials, User}
+import domain.user.{AuthCtx, BasicCredentials, User}
 import email.EmailAlgebra
 import user_algebra.UserAlgebra
 
 class ServerExecutor[F[_]: Async](
     appConfig: AppConfig,
     userAlgebra: UserAlgebra[F],
-    emailAlgebra: EmailAlgebra[F]
+    emailAlgebra: EmailAlgebra[F],
+    authAlgebra: AuthAlgebra[F]
 ) extends Executor[F] {
   override def register(user: User): F[Unit] = for {
     tokenToSend <- userAlgebra
@@ -35,7 +37,7 @@ class ServerExecutor[F[_]: Async](
     _ <- userAlgebra.activateUser(token)
   } yield ()
 
-  override def login(basicCredentials: BasicCredentials): F[String] = for{
-    _ <-
-  } yield ???
+  override def login(basicCredentials: BasicCredentials): F[AuthCtx] = for{
+    ctx <- authAlgebra.authenticateUser(basicCredentials)
+  } yield ctx
 }

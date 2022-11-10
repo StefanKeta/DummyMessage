@@ -43,8 +43,8 @@ trait UserEndpoints {
       .in(jsonBody[BasicCredentials])
       .errorOut(
         oneOf[ErrorInfo](
-          oneOfVariant[ErrorInfo](
-            statusCode(StatusCode.BadRequest).and(jsonBody[ValidationErrors])
+          oneOfVariant(
+            statusCode(StatusCode.BadRequest).and(jsonBody[UserDoesNotExist])
           ),
           oneOfVariant(
             statusCode(StatusCode.Unauthorized).and(jsonBody[UnauthorizedError])

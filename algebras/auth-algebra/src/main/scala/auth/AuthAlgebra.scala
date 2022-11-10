@@ -31,19 +31,28 @@ object AuthAlgebra {
     override def authenticateUser(
         basicCredentials: BasicCredentials
     ): F[AuthCtx] = for {
-      hashedPassword <- passwordHasher.hashPassword(basicCredentials.password)
       maybeUserDao <- userQueries
-        .findByEmailAndPassword(basicCredentials.email, hashedPassword)
+        .findByEmail(basicCredentials.email)
         .transact(xa)
       authCtx <- maybeUserDao match {
         case Some(userDao) =>
           for {
+            passwordsMatch <- passwordHasher.verifyPassword(
+              userDao.password,
+              basicCredentials.password
+            )
+            _ <-
+              if (passwordsMatch) Sync[F].unit
+              else
+                Sync[F].raiseError(
+                  UserDoesNotExist("Invalid username and/or password")
+                )
             authCtx <- provideAuthContext(userDao)
           } yield authCtx
         case None =>
           Sync[F].raiseError(
             UserDoesNotExist(
-              s"Invalid username and/or password"
+              "Invalid username and/or password"
             )
           )
       }

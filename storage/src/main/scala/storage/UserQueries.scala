@@ -12,10 +12,6 @@ import java.util.UUID
 
 trait UserQueries extends GenericQueries[UserDao] {
   def findByEmail(email: String): ConnectionIO[Option[UserDao]]
-  def findByEmailAndPassword(
-      email: String,
-      password: String
-  ): ConnectionIO[Option[UserDao]]
   def activateUser(userId: UUID): ConnectionIO[Int]
 }
 
@@ -55,16 +51,6 @@ object UserQueries {
         sql"""
             SELECT * FROM user_account WHERE email = $email
            """.query[UserDao].option
-
-      override def findByEmailAndPassword(
-          email: String,
-          password: String
-      ): doobie.ConnectionIO[Option[UserDao]] =
-        sql"""
-             SELECT * FROM user_account WHERE email = $email AND password = $password
-           """
-          .query[UserDao]
-          .option
 
       override def activateUser(userId: UUID): ConnectionIO[Int] =
         sql"""

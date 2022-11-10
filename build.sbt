@@ -87,7 +87,7 @@ lazy val routes = createModule(
     "com.beachape" %% "enumeratum-circe" % "1.7.0"
   )
 )
-  .dependsOn(domain, endpoints, userAlgebra, emailAlgebra)
+  .dependsOn(domain, endpoints, userAlgebra, emailAlgebra, authAlgebra)
 
 lazy val server = createModule(
   "server",
@@ -146,7 +146,7 @@ lazy val authAlgebra = createModule(
   "auth-algebra",
   "algebras/auth-algebra"
 )
-  .dependsOn(core,utilToken,utilPassword,utilTime,storage)
+  .dependsOn(core, utilToken, utilPassword, utilTime, storage)
 
 lazy val emailAlgebra = createModule(
   "email-algebra",
@@ -162,7 +162,6 @@ lazy val userAlgebra = createModule(
   "algebras/user-algebra"
 )
   .dependsOn(domain, storage, utilPassword, utilToken, utilTime)
-
 
 def createModule(
     name: String,
